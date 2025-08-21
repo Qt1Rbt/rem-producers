@@ -1,0 +1,45 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./configs/redis.conf:/redis.conf
+    command: ["redis-server", "/redis.conf"]
+
+  forwarder:
+    build: 
+      context: ./producer
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    # Uncomment if you want to run the forwarder automatically
+    # command: ["/app/your_binary"]
+
+  event_consumer:
+    build:
+      context: ./consumers
+      target: alarms_consumer
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    restart: always
+
+  download_consumer:
+    build:
+      context: ./consumers
+      target: pending_downloads_consumer
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - OUTPUT_FOLDER=/tmp/hik_output
+      # - USERNAME=admin
+      # - PASSWORD=
+    restart: always
+
+volumes:
+  redis-data:

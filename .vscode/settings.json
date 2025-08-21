@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.ts": "typescript",
+        "parser.h": "c",
+        "hiredis.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "initializer_list": "c"
+    }
+}

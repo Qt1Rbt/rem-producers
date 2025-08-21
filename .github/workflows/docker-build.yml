@@ -1,0 +1,35 @@
+name: Docker Build and Export Artifact
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t hik_alarm_forward .
+
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Copy binary from Docker container
+        run: |
+          container_id=$(docker create hik_alarm_forward)
+          docker cp $container_id:/app/hik_alarm_forward ./output/
+          docker rm $container_id
+
+      - name: Archive binary
+        run: tar -cvf hik_alarm_forward.tar -C output hik_alarm_forward
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hik_alarm_forward-tar
+          path: hik_alarm_forward.tar
