@@ -1,0 +1,3 @@
+[submodule "consumers"]
+	path = consumers
+	url = git@github.com:Qt1Rbt/rem-consumers.git
