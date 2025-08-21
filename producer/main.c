@@ -437,6 +437,8 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
     
+    // THIS IS DUMB AS IT WILL LEAK CREDENTIALS TO ANY USER ABLE TO SEE CMDLINE.
+    // I don't care for my use case but don't do that
     const char *username = (argc > 1) ? argv[1] : DEFAULT_USERNAME;
     const char *password = (argc > 2) ? argv[2] : DEFAULT_PASSWORD;
     const char *event_url = (argc > 3) ? argv[3] : DEFAULT_EVENT_URL;

@@ -2,6 +2,8 @@
 
 This project contains a C program (`main.c`).
 
+> [!CAUTION]
+> Don't meant to be use / copied for prod usage. This is a simple program that watch for thermal alarm in HIK event stream and send them to a redis queue. This is possibly/probably not memory safe, will leak passwords if passed as args and redis is probably not the best choice for important message handling.
 
 ## Dependencies
 
