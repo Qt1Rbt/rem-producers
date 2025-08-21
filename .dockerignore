@@ -2,6 +2,5 @@ sample_alarm.xml
 tmp
 compose.override.yml
 compose.yml
-Dockerfile
 .vscode
 .github
