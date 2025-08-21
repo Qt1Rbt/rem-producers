@@ -17,7 +17,7 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t hik_alarm_forward consumers
+        run: docker build -t hik_alarm_forward producer
 
       - name: Create output directory
         run: mkdir -p output
