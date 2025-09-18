@@ -16,7 +16,7 @@
 #define DEFAULT_PASSWORD "PWD"
 #define TRIGGER_CURL_TIMEOUT_SECONDS 5L
 #define MAX_CHANNELS 32
-#define TRIGGER_MIN_INTERVAL 120
+#define TRIGGER_MIN_INTERVAL_SC 60
 
 typedef struct
 {
@@ -196,8 +196,9 @@ static void process_event(const char *xml_chunk)
     if (!ev)
         return;
 
-    if (strcmp(ev->eventDescription, "Temperature Measurement Alarm") != 0 &&
-        strcmp(ev->eventDescription, "Temperature Measurement Precautionary Alarm") != 0)
+    bool isAlarm = strcmp(ev->eventDescription, "Temperature Measurement Alarm") == 0;
+    bool isPrecautionaryAlarm = strcmp(ev->eventDescription, "Temperature Measurement Alarm") == 0;
+    if ( !isAlarm && !isPrecautionaryAlarm )
     {
         free_event(ev);
         return;
@@ -234,9 +235,15 @@ static void process_event(const char *xml_chunk)
     // Allow new event if interval or temp delta > 20
     time_t now = time(NULL);
     double tempDelta = fabs(currTemp - channels[idx].lastTemp);
-    if (difftime(now, channels[idx].lastTrigger) > TRIGGER_MIN_INTERVAL || tempDelta > 20.0) {
+    if (
+        (isPrecautionaryAlarm && tempDelta > 20.0) || //We may change this to only account for big increase 
+            difftime(now, channels[idx].lastTrigger) > TRIGGER_MIN_INTERVAL_SC //min interval btw two alarms
+            || tempDelta > 20.0 //Security to account for rapid changes and force retrigger
+        ) {
         should_trigger = 1;
-        channels[idx].lastTrigger = now;
+        if(isAlarm) { //prealarm shouldn't delay alarm sending
+            channels[idx].lastTrigger = now;
+        } 
         channels[idx].lastTemp = currTemp;
     }
     
