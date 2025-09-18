@@ -197,7 +197,7 @@ static void process_event(const char *xml_chunk)
         return;
 
     bool isAlarm = strcmp(ev->eventDescription, "Temperature Measurement Alarm") == 0;
-    bool isPrecautionaryAlarm = strcmp(ev->eventDescription, "Temperature Measurement Alarm") == 0;
+    bool isPrecautionaryAlarm = strcmp(ev->eventDescription, "Temperature Measurement Precautionary Alarm") == 0;
     if ( !isAlarm && !isPrecautionaryAlarm )
     {
         free_event(ev);
@@ -235,18 +235,24 @@ static void process_event(const char *xml_chunk)
     // Allow new event if interval or temp delta > 20
     time_t now = time(NULL);
     double tempDelta = fabs(currTemp - channels[idx].lastTemp);
+    double timeDiff = difftime(now, channels[idx].lastTrigger);
+    bool precautionnaryButIncreased = (isPrecautionaryAlarm && tempDelta > 20.0);
+    printf("Check conds: delta %f, time %f, precautionnary %s\n", tempDelta, timeDiff, precautionnaryButIncreased? "true": "false");
+    fflush(stdout);
+
     if (
-        (isPrecautionaryAlarm && tempDelta > 20.0) || //We may change this to only account for big increase 
-            difftime(now, channels[idx].lastTrigger) > TRIGGER_MIN_INTERVAL_SC //min interval btw two alarms
-            || tempDelta > 20.0 //Security to account for rapid changes and force retrigger
-        ) {
+        precautionnaryButIncreased ||      // We may change this to only account for big increase
+        timeDiff > TRIGGER_MIN_INTERVAL_SC || // min interval btw two alarms
+        tempDelta > 20.0                // Security to account for rapid changes and force retrigger
+    )
+    {
         should_trigger = 1;
         if(isAlarm) { //prealarm shouldn't delay alarm sending
             channels[idx].lastTrigger = now;
         } 
         channels[idx].lastTemp = currTemp;
     }
-    
+
     if (should_trigger) {
         char json[2048];
         snprintf(json, sizeof(json),
